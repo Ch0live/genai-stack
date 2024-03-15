@@ -13,7 +13,6 @@ pydantic
 uvicorn
 sse-starlette
 boto3
-# missing from the langchain base image?
-langchain-openai
-langchain-community
-langchain-google-genai
+langchain_openai
+langchain_community
+langchain_google_genai

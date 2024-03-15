@@ -2,19 +2,19 @@
 - Create a `.env` file from the environment template file `env.example`
 
 Available variables:
-| Variable Name        | Default value                     | Description                                                                                       |
-| -------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| OLLAMA_BASE_URL      | http://host.docker.internal:11434 | REQUIRED - URL to Ollama LLM API                                                                  |
-| NEO4J_URI            | neo4j://database:7687             | REQUIRED - URL to Neo4j database                                                                  |
-| NEO4J_USERNAME       | neo4j                             | REQUIRED - Username for Neo4j database                                                            |
-| NEO4J_PASSWORD       | password                          | REQUIRED - Password for Neo4j database                                                            |
-| LLM                  | llama2                            | REQUIRED - Can be any Ollama model tag, or gpt-4 or gpt-3.5 or claudev2                           |
-| EMBEDDING_MODEL      | sentence_transformer              | REQUIRED - Can be sentence_transformer, openai or ollama                                          |
-| OPENAI_API_KEY       |                                   | REQUIRED - Only if LLM=gpt-4 or LLM=gpt-3.5 or embedding_model=openai                             |
-| LANGCHAIN_ENDPOINT   | "https://api.smith.langchain.com" | OPTIONAL - URL to Langchain Smith API                                                             |
-| LANGCHAIN_TRACING_V2 | false                             | OPTIONAL - Enable Langchain tracing v2                                                            |
-| LANGCHAIN_PROJECT    |                                   | OPTIONAL - Langchain project name                                                                 |
-| LANGCHAIN_API_KEY    |                                   | OPTIONAL - Langchain API key                                                                      |
+| Variable Name        | Default value                     | Description                                                             |
+| -------------------- | --------------------------------- | ----------------------------------------------------------------------- |
+| OLLAMA_BASE_URL      | http://host.docker.internal:11434 | REQUIRED - URL to Ollama LLM API                                        |
+| NEO4J_URI            | neo4j://database:7687             | REQUIRED - URL to Neo4j database                                        |
+| NEO4J_USERNAME       | neo4j                             | REQUIRED - Username for Neo4j database                                  |
+| NEO4J_PASSWORD       | password                          | REQUIRED - Password for Neo4j database                                  |
+| LLM                  | llama2                            | REQUIRED - Can be any Ollama model tag, or gpt-4 or gpt-3.5 or claudev2 |
+| EMBEDDING_MODEL      | sentence_transformer              | REQUIRED - Can be sentence_transformer, openai or ollama                |
+| OPENAI_API_KEY       |                                   | REQUIRED - Only if LLM=gpt-4 or LLM=gpt-3.5 or embedding_model=openai   |
+| LANGCHAIN_ENDPOINT   | "https://api.smith.langchain.com" | OPTIONAL - URL to Langchain Smith API                                   |
+| LANGCHAIN_TRACING_V2 | false                             | OPTIONAL - Enable Langchain tracing v2                                  |
+| LANGCHAIN_PROJECT    |                                   | OPTIONAL - Langchain project name                                       |
+| LANGCHAIN_API_KEY    |                                   | OPTIONAL - Langchain API key                                            |
 
 ## Get dependency
 - Use a Venv. Set up using this guide
@@ -46,9 +46,13 @@ Ollama now supports Windows. Install [Ollama](https://ollama.ai) on Windows and 
 	- Go to Neo4J, your new database and then plugins. Click the drop down under APOC and choose Install and Restart
 	- Check APOC is added successfully and wait for the database to restart. If it fails just try re running it (it took 2 attempts for me first time)
 
+- In a terminal run `streamlit run loader.py --server.port=8502 --server.address=localhost`.
+	- Navigate to [localhost:8504](http://localhost:8504/) and see a Hello World response and check it's working
+	- Use the web interface to load Stack Overflow questions
+
 ## Set up the LLM
 - In a terminal run `ollama serve` to start the local LLM
-- Alternatively see the `.env` file for how to use other remotely hosted models
+  - Alternatively see the `.env` file for how to use other remotely hosted models
 
 ## Run the services
 - In a terminal run `python api.py`. 

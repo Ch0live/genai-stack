@@ -1,8 +1,6 @@
 # GenAI Stack
 
-Forked from docker/genai-stack repo.
-
-See [the set up locally guide](setuplocally.md) for more guidance on local set up.
+Forked from docker/genai-stack repo. See [the set up locally guide](set_up_locally.md) for more guidance on local set up.
 
 
 # Develop
@@ -14,13 +12,13 @@ See [the set up locally guide](setuplocally.md) for more guidance on local set u
 
 Here's what's in this repo:
 
-| Name | Main files | Compose name | URLs | Description |
-|---|---|---|---|---|
-| Support Bot | `bot.py` | `bot` | http://localhost:8501 | Main usecase. Fullstack Python application. |
-| Stack Overflow Loader | `loader.py` | `loader` | http://localhost:8502 | Load SO data into the database (create vector embeddings etc). Fullstack Python application. |
-| PDF Reader | `pdf_bot.py` | `pdf_bot` | http://localhost:8503 | Read local PDF and ask it questions. Fullstack Python application. |
-| Standalone Bot API | `api.py` | `api` | http://localhost:8504 | Standalone HTTP API streaming (SSE) + non-streaming endpoints Python. |
-| Standalone Bot UI | `front-end/` | `front-end` | http://localhost:8505 | Standalone client that uses the Standalone Bot API to interact with the model. JavaScript (Svelte) front-end. |
+| Name                  | Main files   | Compose name | URLs                  | Description                                                                                                   |
+| --------------------- | ------------ | ------------ | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Support Bot           | `bot.py`     | `bot`        | http://localhost:8501 | Main usecase. Fullstack Python application.                                                                   |
+| Stack Overflow Loader | `loader.py`  | `loader`     | http://localhost:8502 | Load SO data into the database (create vector embeddings etc). Fullstack Python application.                  |
+| PDF Reader            | `pdf_bot.py` | `pdf_bot`    | http://localhost:8503 | Read local PDF and ask it questions. Fullstack Python application.                                            |
+| Standalone Bot API    | `api.py`     | `api`        | http://localhost:8504 | Standalone HTTP API streaming (SSE) + non-streaming endpoints Python.                                         |
+| Standalone Bot UI     | `front-end/` | `front-end`  | http://localhost:8505 | Standalone client that uses the Standalone Bot API to interact with the model. JavaScript (Svelte) front-end. |
 
 The database can be explored at http://localhost:7474.
 
@@ -39,9 +37,9 @@ DB client: http://localhost:7474
 ![](.github/media/app1-rag-selector.png)
 *(Chat input + RAG mode selector)*
 
-|  |  |
-|---|---|
-| ![](.github/media/app1-generate.png) | ![](.github/media/app1-ticket.png) |
+|                                               |                                                   |
+| --------------------------------------------- | ------------------------------------------------- |
+| ![](.github/media/app1-generate.png)          | ![](.github/media/app1-ticket.png)                |
 | *(CTA to auto generate support ticket draft)* | *(UI of the auto generated support ticket draft)* |
 
 ---
@@ -59,8 +57,8 @@ DB client: http://localhost:7474
 
 
 
-|  |  |
-|---|---|
+|                                  |                                   |
+| -------------------------------- | --------------------------------- |
 | ![](.github/media/app2-ui-1.png) | ![](.github/media/app2-model.png) |
 
 ## App 3 Question / Answer with a local PDF
