@@ -50,6 +50,13 @@ Ollama now supports Windows. Install [Ollama](https://ollama.ai) on Windows and 
 	- Navigate to [localhost:8504](http://localhost:8504/) and see a Hello World response and check it's working
 	- Use the web interface to load Stack Overflow questions
 
+> [!NOTE]
+> You can stop this service after all data has been loaded.
+
+- Go back to Neo4j and under Graph Apps choose 
+  - Neo4j Browser (if you wish to run Cypher requests against the dbms in a Jupyter Notebook style)
+  - Neo4j Bloom (for an interactive UI for exploring the graph dbms) 
+
 ## Set up the LLM
 - In a terminal run `ollama serve` to start the local LLM
   - Alternatively see the `.env` file for how to use other remotely hosted models
