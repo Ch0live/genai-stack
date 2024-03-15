@@ -159,3 +159,8 @@ async def generate_ticket_api(question: BaseTicket = Depends()):
         input_question=question.text,
     )
     return {"result": {"title": new_title, "text": new_question}, "model": llm_name}
+
+# Equivalent to ENTRYPOINT [ "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8504" ] line
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8504)

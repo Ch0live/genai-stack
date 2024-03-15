@@ -1,5 +1,8 @@
 .env
+.vscode
+__pycache__
 data/
 embedding_model/*
 !embedding_model/.ignore
 .DS_Store
+scratch_files
