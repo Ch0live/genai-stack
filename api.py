@@ -1,10 +1,12 @@
 import os
 
-from langchain_community.graphs import Neo4jGraph
+from neo4j import GraphDatabase
 from dotenv import load_dotenv
 from extractor import extract_teams
+from summariser import summarise_two_team_matches_response
 from utils import (BaseLogger)
 from chains import (
+    configure_llm_only_chain,
     load_embedding_model,
     load_llm,
     generate_ticket,
@@ -24,11 +26,10 @@ load_dotenv(".env")
 url = os.getenv("NEO4J_URI")
 username = os.getenv("NEO4J_USERNAME")
 password = os.getenv("NEO4J_PASSWORD")
+
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 embedding_model_name = os.getenv("EMBEDDING_MODEL")
 llm_name = os.getenv("LLM")
-# Remapping for Langchain Neo4j integration
-os.environ["NEO4J_URL"] = url
 
 embeddings, dimension = load_embedding_model(
     embedding_model_name,
@@ -36,12 +37,10 @@ embeddings, dimension = load_embedding_model(
     logger=BaseLogger(),
 )
 
-neo4j_graph = Neo4jGraph(url=url, username=username, password=password, database="epl-data")
-
 llm = load_llm(
     llm_name, logger=BaseLogger(), config={"ollama_base_url": ollama_base_url}
 )
-
+llm_chain = configure_llm_only_chain(llm)
 
 class QueueCallback(BaseCallbackHandler):
     """Callback handler for streaming LLM responses to a queue."""
@@ -79,6 +78,22 @@ def stream(cb, q) -> Generator:
         except Empty:
             continue
 
+def get_team_names():
+
+    file_path = "team_names.txt"
+
+    try:
+        with open(file_path) as f:
+            return f.read().splitlines() 
+    except FileNotFoundError:
+        print(f"The file '{file_path}' does not exist.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+team_names = get_team_names()
+print("Teams we can provide data on:\n")
+print(team_names)
+print()
 
 app = FastAPI()
 origins = ["*"]
@@ -105,32 +120,52 @@ class Question(BaseModel):
 class BaseTicket(BaseModel):
     text: str
 
-
 @app.get("/query-stream")
 def query_stream(question: Question = Depends()):
+
+    output_function = configure_llm_only_chain(llm)
 
     # extract from the question the 2 football teams mentioned
     csvTeams = extract_teams(question, llm)
 
-    if len(csvTeams) != 2 or ", " not in csvTeams:
-        output = "Unable to identify the teams in your question"
-    else:
+    csvTeamsSplitSuccessful = True
+    try:
         [teamA, teamB] = csvTeams.split(", ")
-        print(teamA)
-        print(teamB)
+        print("Extracted football teams: " + csvTeams + "\n\n")
+        csvTeamsSplitSuccessful = False if teamA not in team_names or teamB not in team_names else True
+    except ValueError:
+        csvTeamsSplitSuccessful = False
 
+    # if 2 teams were found, look them up, get data and return an LLM formatted response for them
+    if csvTeamsSplitSuccessful:
+        print("Providing game data on teams\n\n")
+        
         # call the database to get the match
         cypher_all_matches_between_two_teams = """MATCH (t:Match) 
-        WHERE t.awayTeam = \"{teamA}\" AND t.homeTeam = \"{teamB}\" 
-        OR t.awayTeam = \"{teamB}\" AND t.homeTeam = \"{teamA}
+        WHERE t.awayTeam = $teamA AND t.homeTeam = $teamB 
+        OR t.awayTeam = $teamB AND t.homeTeam = $teamA
         RETURN properties(t)
         """
-        matches_data = neo4j_graph.query(cypher_all_matches_between_two_teams, {"teamA": teamA, "teamB": teamB})
 
-        # format the answer
-        # finalResult = summarise_two_team_matches_response()
+        with GraphDatabase.driver(url, auth=(username, password)) as driver:
+            driver.verify_connectivity()
 
-    output_function = llm_chain
+            records, summary, keys = driver.execute_query(
+                cypher_all_matches_between_two_teams, 
+                teamA=teamA, 
+                teamB=teamB, 
+                database_="epl-data"
+            )
+
+            driver.close()
+
+        print("Found db data around the teams games:")
+        print(records)
+
+        # Summarise the response using the llm
+        output_function = summarise_two_team_matches_response(llm, records)
+    else:
+        print("unable to find 2 distinct teams; using llm response with no database data")
 
     q = Queue()
 
@@ -142,7 +177,8 @@ def query_stream(question: Question = Depends()):
 
     def generate():
         yield json.dumps({"init": True, "model": llm_name})
-        for token, _ in stream(cb, q):
+        custom_stream = stream(cb, q)
+        for token, _ in custom_stream:
             yield json.dumps({"token": token})
 
     return EventSourceResponse(generate(), media_type="text/event-stream")
