@@ -2,15 +2,11 @@ import os
 
 from langchain_community.graphs import Neo4jGraph
 from dotenv import load_dotenv
-from utils import (
-    create_vector_index,
-    BaseLogger,
-)
+from extractor import extract_teams
+from utils import (BaseLogger)
 from chains import (
     load_embedding_model,
     load_llm,
-    configure_llm_only_chain,
-    configure_qa_rag_chain,
     generate_ticket,
 )
 from fastapi import FastAPI, Depends
@@ -40,17 +36,10 @@ embeddings, dimension = load_embedding_model(
     logger=BaseLogger(),
 )
 
-# if Neo4j is local, you can go to http://localhost:7474/ to browse the database
-neo4j_graph = Neo4jGraph(url=url, username=username, password=password)
-create_vector_index(neo4j_graph, dimension)
+neo4j_graph = Neo4jGraph(url=url, username=username, password=password, database="epl-data")
 
 llm = load_llm(
     llm_name, logger=BaseLogger(), config={"ollama_base_url": ollama_base_url}
-)
-
-llm_chain = configure_llm_only_chain(llm)
-rag_chain = configure_qa_rag_chain(
-    llm, embeddings, embeddings_store_url=url, username=username, password=password
 )
 
 
@@ -105,7 +94,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Api.py is live"}
 
 
 class Question(BaseModel):
@@ -118,10 +107,30 @@ class BaseTicket(BaseModel):
 
 
 @app.get("/query-stream")
-def qstream(question: Question = Depends()):
+def query_stream(question: Question = Depends()):
+
+    # extract from the question the 2 football teams mentioned
+    csvTeams = extract_teams(question, llm)
+
+    if len(csvTeams) != 2 or ", " not in csvTeams:
+        output = "Unable to identify the teams in your question"
+    else:
+        [teamA, teamB] = csvTeams.split(", ")
+        print(teamA)
+        print(teamB)
+
+        # call the database to get the match
+        cypher_all_matches_between_two_teams = """MATCH (t:Match) 
+        WHERE t.awayTeam = \"{teamA}\" AND t.homeTeam = \"{teamB}\" 
+        OR t.awayTeam = \"{teamB}\" AND t.homeTeam = \"{teamA}
+        RETURN properties(t)
+        """
+        matches_data = neo4j_graph.query(cypher_all_matches_between_two_teams, {"teamA": teamA, "teamB": teamB})
+
+        # format the answer
+        # finalResult = summarise_two_team_matches_response()
+
     output_function = llm_chain
-    if question.rag:
-        output_function = rag_chain
 
     q = Queue()
 
@@ -142,8 +151,6 @@ def qstream(question: Question = Depends()):
 @app.get("/query")
 async def ask(question: Question = Depends()):
     output_function = llm_chain
-    if question.rag:
-        output_function = rag_chain
     result = output_function(
         {"question": question.text, "chat_history": []}, callbacks=[]
     )
@@ -160,7 +167,6 @@ async def generate_ticket_api(question: BaseTicket = Depends()):
     )
     return {"result": {"title": new_title, "text": new_question}, "model": llm_name}
 
-# Equivalent to ENTRYPOINT [ "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8504" ] line
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8504)

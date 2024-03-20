@@ -49,7 +49,7 @@ def extract_teams(question, llm):
   )
 
   chain = LLMChain(llm=llm, prompt=prompt)
-  return chain.invoke(question)
+  return chain.invoke(question)["text"]
 
 if __name__ == "__main__":
   load_dotenv(".env")
@@ -59,3 +59,9 @@ if __name__ == "__main__":
   print(extract_teams("What was the result between Man City and Arsenal?", llm))
   print(extract_teams("Who won in Chelsea Bournemouth", llm))
   print(extract_teams("Villa vs United?", llm))
+  print(extract_teams("The seagulls vs the hammers?", llm))
+  print(extract_teams("Spurs vs the scousers?", llm))
+  print(extract_teams("The manchester derby? Between the 2 biggest teams", llm))
+  print(extract_teams("The manchester derby?", llm))
+  print(extract_teams("The london derby?", llm))
+  print(extract_teams("The gull derby?", llm))
